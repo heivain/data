@@ -4,31 +4,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pytz
 
-def parse_tempdata(file):
-    #input fmi csv
-    #output [ [dt1,T1] , [dt2,T2] , ... ]
-    temp_list=[]
-    with open(file, mode='r') as data:
-        csvData=csv.reader(data)
-        first=True
-        for line in csvData:
-            if first:
-                first=False
-                continue
-            #end if
-            h,m=line[3].split(':')
-            utc_time=dt.datetime(int(line[0]),int(line[1]),int(line[2]),int(h),int(m),tzinfo=dt.timezone.utc)
-            try:
-                temp_list.append([utc_time,float(line[5])])
-            except:
-                temp_list.append([utc_time,np.nan])
-            #end try except
-        return temp_list
-        #end for
-    #end with
-#end def
+class temperature_data:
+    timestamp=None
+    def __init__(self, file):
+        self.file=file
+    #end def
 
-def tz_conv(data,tz):
+    def parse_csv(self):
+        with open(self.file, mode='r') as  data:
+            csvData=csv.reader(data)
+            next(csvData)
+            
+            #get_time() is called by timestamp(). Returns list [hour,minute].
+            get_time=lambda line : line[3].split(':')
+            
+            #timestamp() creates timestamp from csv-line
+            timestamp=lambda line : dt.datetime(int(line[0]),int(line[1]),int(line[2]),int(get_time(line)[0]),int(get_time(line)[1]),tzinfo=dt.timezone.utc)
+            
+            #temperatures=[ [datetime1,temperature1], [datetime2, temperature2], ... ]
+            temperatures=[[timestamp(line), float(line[5])] if len(line[5])>0 else [timestamp(line),np.nan] for line in csvData]
+            
+        #end with
+        return temperatures
+    #end def
+
+#end class
+
+csvFile=temperature_data('dst.csv')
+
+parsed_data=csvFile.parse_csv()
+parsed_dataf=parse_tempdata('dst.csv')
+
+for x in parsed_data:
+    print(x)
+
+'''def tz_conv(data,tz):
     for x in data:
         x[0]=x[0].astimezone(tz)
     #end for
@@ -36,12 +46,7 @@ def tz_conv(data,tz):
 #end def
 
 def avg_temp(temp_list):
-    """
-    Examples
-    --------
-    >>> avg_temp([  [ 1,[[1,2],[3,2]] ], [ 2,[[3,4],[5,6]] ]  ])
-    [[1, 2.0], [2, 5.0]]
-    """
+    #input: [ [dt0,T0] , [dt1,T1] , ... ]
     avg_temps=[[x[0],np.nanmean([p[1] for p in x[1]])] for x in temp_list]
     return avg_temps
 #end def
@@ -102,9 +107,7 @@ parsed_data_eet=tz_conv(parsed_data,pytz.timezone('EET'))
 divided_data=divide_tempdata(parsed_data,fm,ts_m)
 
 tempdata_jan=divided_data[0][1:]
-tempdata_july=divided_data[6][1:]
+tempdata_july=divided_data[6][1:]'''
 
-print('jan',tempdata_jan)
-print('july',tempdata_july)
 
 
