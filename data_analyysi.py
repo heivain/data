@@ -33,7 +33,6 @@ class temperature_data:
 csvFile=temperature_data('dst.csv')
 
 parsed_data=csvFile.parse_csv()
-parsed_dataf=parse_tempdata('dst.csv')
 
 for x in parsed_data:
     print(x)
